@@ -1,0 +1,86 @@
+---
+title: "Examen modelo 2"
+output: html_document
+date: "2025-09-13"
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(readr)
+```
+
+```{r}
+data <- read_csv("gapminder.csv")
+```
+
+1.  Usando los datos de 2007, haz un gráfico de dispersión de **población vs PIB per cápita** con puntos coloreados por continente. Agrega título y nombres de ejes adecuados.
+
+```{r}
+data_2007 <- data %>%
+  filter(anio == "2007")
+data_2007
+```
+
+```{r}
+ggplot(data_2007, aes(x = pib_per_capita, y = poblacion, color = continente)) +
+geom_point() +
+  geom_point(alpha = 0.7, size = 3) +
+  scale_y_log10() +
+  labs(title = "Poblacion VS PBI en 2007",
+       x = "Poblacion",
+       y = "PBI")
+```
+
+2.  Calcula la **expectativa de vida promedio y máxima** por continente en 2007
+
+```{r}
+data_2007 %>%
+  group_by(continente) %>%
+  summarise(ev_promedio = mean(esperanza_de_vida, na.rm = TRUE),
+            ev_max = max(esperanza_de_vida, na.rm = TRUE))
+```
+
+3.  Crea un dataset que muestre el **PIB per cápita promedio por continente y año**, con continentes en columnas y años en filas.
+
+```{r}
+data_pib <- data %>%
+  group_by(continente, anio) %>%
+  summarise(pib_promedio = mean(pib_per_capita, na.rm = TRUE))
+
+data_pib_ancho <- data_pib %>%
+  pivot_wider(names_from = continente,
+              values_from = pib_promedio)
+data_pib_ancho
+```
+
+4.  Lee `idiomas.csv`. Une la información con `data` para obtener, en el año 2007, **qué idioma oficial corresponde al país con mayor expectativa de vida en cada continente**.
+
+```{r}
+idiomas <- read.csv("idiomas.csv")
+```
+
+```{r}
+data_idiomas_2007 <- data_2007 %>% 
+  group_by(continente) %>%
+  slice_max(order_by = esperanza_de_vida, n = 1) %>%
+  left_join(idiomas, by = "pais")
+
+data_idiomas_2007 %>%
+    select(continente, pais, esperanza_de_vida, idioma_oficial_1)
+```
+
+5.  Reemplaza en la columna `continente` todos los valores `"Oceanía"` por `"Oceania"` (sin tilde).
+
+```{r}
+data %>%
+  mutate(continente = if_else(continente == "Oceanía", "Oceania", continente))
+```
+
+6.  Crea un boxplot de **esperanza de vida por continente en 2007**
+
+```{r}
+ggplot(data_2007, aes(x = continente, y = esperanza_de_vida, fill = continente)) +
+  geom_boxplot()
+```
