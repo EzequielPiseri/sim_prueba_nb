@@ -1,0 +1,75 @@
+---
+title: "simu_prueba_2"
+format: html
+editor: visual
+---
+
+## Simulacro de prueba 2
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(readr)
+
+data <- read_csv("gapminder.csv")
+idiomas <- read_csv("idiomas.csv")
+```
+
+1.  Con los datos del año **2007**, realizá un gráfico de dispersión de **PIB per cápita vs esperanza de vida**, coloreando los puntos por continente. Agregá título y etiquetas adecuadas.
+
+    ```{r}
+    data_2007 <- data %>%
+      filter(anio == 2007)
+
+    ggplot(data_2007, aes(x = pib_per_capita, y = esperanza_de_vida, color = continente)) +
+      geom_point() +
+      labs(
+        title = "PBI vs EDV 2007",
+        x = "PBI",
+        y = "Esperanza de Vida"
+      )
+    ```
+
+2.  Calculá el **promedio y el mínimo de la población** por continente en 2007.
+
+    ```{r}
+    data_2007 %>%
+      group_by(continente) %>%
+      summarise(
+        promedio = mean(poblacion, na.rm = TRUE),
+        minimo = min(poblacion, na.rm = TRUE)
+      )
+    ```
+
+3.   Generá un dataset que muestre la **esperanza de vida promedio por continente y año**, con continentes en columnas y años en filas.
+
+    ```{r}
+    data_prime <- data %>%
+      group_by(continente, anio) %>%
+      summarise(edv_promedio = mean(esperanza_de_vida, na.rm = TRUE),) %>%
+      pivot_wider(names_from = continente, values_from = edv_promedio)
+
+    data_prime
+    ```
+
+4.  Leé `idiomas.csv` y unilo a los datos de 2007 para obtener el **idioma oficial de los países con mayor población en cada continente**.
+
+    ```{r}
+    data_idiomas <- data_2007 %>%
+      left_join(idiomas, by = "pais") %>%
+      group_by(continente) %>%
+      arrange(desc(poblacion)) %>%
+      slice(1) %>%
+      select(pais, continente, idioma_oficial_1)
+    data_idiomas
+    ```
+
+5.  Reemplazá en la columna `continente` el valor `"Américas"` por `"America"`.
+
+```{r}
+data_arreglo <- data %>%
+  mutate(continente = if_else(continente == "Américas", "America", continente))
+
+data_arreglo
+```
